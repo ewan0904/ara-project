@@ -51,10 +51,13 @@ with st.form("Speichern"):
     telefonnummer = st.text_input("Telefonnummer", value=st.session_state["customer_information_1"]["Telefonnummer"])
     email = st.text_input("E-Mail", value=st.session_state["customer_information_1"]["E_Mail"])
     angebots_id = st.text_input("Angebots-ID", value=st.session_state["customer_information_1"]["Angebots_ID"])
+    kunden_nummer = st.text_input("Kunden-Nr.", value=st.session_state["customer_information_1"]["Kunden_Nummer"])
+    ansprech_partner = st.text_input("Ansprechpartner", value=st.session_state["customer_information_1"]["Ansprech_Partner"])
+    ansprech_partner_email = st.text_input("Ansprechpartner Email", value=st.session_state["customer_information_1"]["Ansprech_Partner_Email"])
     kunden_button = st.form_submit_button("Kunden-Informationen Speichern")
 
     if kunden_button:
-        if all([anrede, vorname, nachname, firma, adresse, plz, ort, angebots_id]):
+        if all([anrede, vorname, nachname, firma, adresse, plz, ort, angebots_id, kunden_nummer, ansprech_partner, ansprech_partner_email]):
             st.session_state["customer_information_1"]["Anrede"] = anrede
             st.session_state["customer_information_1"]["Vorname"] = vorname
             st.session_state["customer_information_1"]["Nachname"] = nachname
@@ -65,6 +68,9 @@ with st.form("Speichern"):
             st.session_state["customer_information_1"]["Telefonnummer"] = telefonnummer
             st.session_state["customer_information_1"]["E_Mail"] = email
             st.session_state["customer_information_1"]["Angebots_ID"] = angebots_id
+            st.session_state["customer_information_1"]["Kunden_Nummer"] = kunden_nummer
+            st.session_state["customer_information_1"]["Ansprech_Partner"] = ansprech_partner
+            st.session_state["customer_information_1"]["Ansprech_Partner_Email"] = ansprech_partner_email
 
             with st.spinner():
                 st.success("Kunden-Informationen gespeichert!")
@@ -80,7 +86,7 @@ st.sidebar.write("**Datenbank**")
 if st.sidebar.button("💾 In Datenbank speichern"):
 
     # List of mandatory fields
-    required_fields = ["Vorname", "Nachname", "Firma", "Adresse", "PLZ", "Ort", "Angebots_ID"]
+    required_fields = ["Vorname", "Nachname", "Firma", "Adresse", "PLZ", "Ort", "Angebots_ID", "Kunden_Nummer"]
 
     # Check
     missing = [field for field in required_fields if not st.session_state["customer_information_1"][field].strip()]

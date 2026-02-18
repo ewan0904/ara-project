@@ -13,7 +13,7 @@ import re
 from PIL import Image
 from utils.excel_generator import generate_excel_file
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from assets.html_structure import get_angebot_template, get_auftrag_template, get_short_angebot_template, get_angebot_wo_price_template
+from assets.html_structure import get_angebot_template
 
 # Authentication
 require_login()
@@ -149,10 +149,13 @@ if selected_label != "-- Bitte auswählen --":
             telefonnummer = st.text_input("Telefonnummer", value=st.session_state["customer_information_2"]["Telefonnummer"])
             email = st.text_input("E-Mail", value=st.session_state["customer_information_2"]["E_Mail"])
             angebots_id = st.text_input("Angebots-ID", value=st.session_state["customer_information_2"]["Angebots_ID"])
+            kunden_nummer = st.text_input("Kunden-Nr.", value=st.session_state["customer_information_2"]["Kunden_Nummer"])
+            ansprech_partner = st.text_input("Ansprechpartner", value=st.session_state["customer_information_2"]["Ansprech_Partner"])
+            ansprech_partner_email = st.text_input("Ansprechpartner Email", value=st.session_state["customer_information_2"]["Ansprech_Partner_Email"])
             kunden_button = st.form_submit_button("Kunden-Informationen speichern")
 
             if kunden_button:
-                if all([anrede, vorname, nachname, firma, adresse, plz, ort, angebots_id]):
+                if all([anrede, vorname, nachname, firma, adresse, plz, ort, angebots_id, kunden_nummer, ansprech_partner, ansprech_partner_email]):
                     st.session_state["customer_information_2"]["Anrede"] = anrede
                     st.session_state["customer_information_2"]["Vorname"] = vorname
                     st.session_state["customer_information_2"]["Nachname"] = nachname
@@ -163,6 +166,9 @@ if selected_label != "-- Bitte auswählen --":
                     st.session_state["customer_information_2"]["Telefonnummer"] = telefonnummer
                     st.session_state["customer_information_2"]["E_Mail"] = email
                     st.session_state["customer_information_2"]["Angebots_ID"] = angebots_id
+                    st.session_state["customer_information_1"]["Kunden_Nummer"] = kunden_nummer
+                    st.session_state["customer_information_1"]["Ansprech_Partner"] = ansprech_partner
+                    st.session_state["customer_information_2"]["Ansprech_Partner_Email"] = ansprech_partner_email
 
                     with st.spinner():
                         st.success("Kunden-Informationen gespeichert!")
@@ -464,105 +470,6 @@ if selected_label != "-- Bitte auswählen --":
                 mime="application/pdf"
             )
 
-    st.sidebar.markdown("<hr style='margin: 2px 0;'>", unsafe_allow_html=True)
-    
-    # --- Angebot ohne Preise-PDF Erstellung ---
-    st.sidebar.subheader("Angebot ohne Preise")
-    if st.sidebar.button("📄 Angebot ohne Preise anzeigen"):
-        try:
-            pdf_path = build_pdf(
-                product_df=st.session_state["product_df_2"],
-                customer_df=pd.DataFrame([st.session_state["customer_information_2"]]),
-                custom_images=st.session_state["images_2"],
-                template_type=get_angebot_wo_price_template(),
-                rabatt=st.session_state["rabatt"],
-                payment_details = st.session_state["payment_details"],
-                if_mwst=st.session_state["mwst"],
-                atu=st.session_state["atu"]
-            )
-            st.session_state["pdf_angebot_wo_price"] = pdf_path
-            st.success("✅ PDF wurde erfolgreich erstellt.")
-            pdf_preview(pdf_path)
-        except ValueError as e:
-            st.error(f"❌ {e}")
-
-    # --- Angebot ohne Preise-PDF Download
-    if st.session_state.get("pdf_angebot_wo_price"):
-        file_name = f"angebot_ohne_preise_{st.session_state['customer_information_2']['Firma']}_{st.session_state['customer_information_2']['Angebots_ID']}.pdf"
-        with open(st.session_state["pdf_angebot_wo_price"], "rb") as f:
-            st.sidebar.download_button(
-                label="⬇️ Angebot herunterladen",
-                data=f,
-                file_name=file_name,
-                mime="application/pdf"
-            )
-
-    st.sidebar.markdown("<hr style='margin: 2px 0;'>", unsafe_allow_html=True)
-    
-
-    # --- Auftrag-PDF Erstellung ---
-    st.sidebar.subheader("Auftrag-Erstellung")
-    if st.sidebar.button("📄 Auftrag anzeigen"):
-        try:
-            payment_details = st.session_state["payment_details"].replace('\n', '<br>')
-            pdf_path = build_pdf(
-                product_df=st.session_state["product_df_2"],
-                customer_df=pd.DataFrame([st.session_state["customer_information_2"]]),
-                custom_images=st.session_state["images_2"],
-                template_type=get_auftrag_template(),
-                rabatt=st.session_state["rabatt"],
-                payment_details=payment_details,
-                if_mwst=st.session_state["mwst"],
-                atu=st.session_state["atu"]
-            )
-            st.session_state["pdf_auftrag"] = pdf_path
-            st.success("✅ PDF wurde erfolgreich erstellt.")
-            pdf_preview(pdf_path)
-        except ValueError as e:
-            st.error(f"❌ {e}")
-    # --- Auftrag-PDF Download ---
-    if st.session_state.get("pdf_auftrag"):
-        file_name = f"auftrag_{st.session_state['customer_information_2']['Firma']}_{st.session_state['customer_information_2']['Angebots_ID']}.pdf"
-        with open(st.session_state["pdf_auftrag"], "rb") as f:
-            st.sidebar.download_button(
-                label="⬇️ Auftrag herunterladen",
-                data=f,
-                file_name=file_name,
-                mime="application/pdf"
-            )
-    
-    st.sidebar.markdown("<hr style='margin: 2px 0;'>", unsafe_allow_html=True)
-
-    # --- Kurzes Angebot Erstellung ---
-    st.sidebar.subheader("Kurzes Angebot")
-    if st.sidebar.button("📄 Kurzes Angebot anzeigen"):
-        try:
-            pdf_path = build_pdf(
-                product_df=st.session_state["product_df_2"],
-                customer_df=pd.DataFrame([st.session_state["customer_information_2"]]),
-                custom_images=st.session_state["images_2"],
-                template_type=get_short_angebot_template(),
-                rabatt=st.session_state["rabatt"],
-                payment_details = st.session_state["payment_details"],
-                if_mwst=st.session_state["mwst"],
-                atu=st.session_state["atu"]
-            )
-            st.session_state["pdf_short"] = pdf_path
-            st.success("✅ PDF wurde erfolgreich erstellt.")
-            pdf_preview(pdf_path)
-        except ValueError as e:
-            st.error(f"❌ {e}")
-
-    # --- Kurzes-PDF Download
-    if st.session_state.get("pdf_short"):
-        file_name = f"angebot_kurz_{st.session_state['customer_information_2']['Firma']}_{st.session_state['customer_information_2']['Angebots_ID']}.pdf"
-        with open(st.session_state["pdf_short"], "rb") as f:
-            st.sidebar.download_button(
-                label="⬇️ Kurzes Angebot herunterladen",
-                data=f,
-                file_name=file_name,
-                mime="application/pdf"
-            )
     st.sidebar.markdown("<hr style='margin: 2px 0;'>", unsafe_allow_html=True)
 
     # --- Excel Download ---

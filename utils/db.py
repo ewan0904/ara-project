@@ -60,7 +60,7 @@ def get_customer(customer_id: str) -> dict:
     Returns:
         dict: Customer data.
     """
-    customer_ref = db.collection("customers").document(customer_id)
+    customer_ref = db.collection("customers2").document(customer_id)
     customer = customer_ref.get().to_dict()
 
     return customer
@@ -77,8 +77,8 @@ def get_invoice(angebots_id: str) -> pd.DataFrame:
     """
     
     # Get all documents in the 'products' subcollection under this invoice
-    invoice_ref = db.collection("invoices").document(angebots_id)
-    products_ref = invoice_ref.collection("products")
+    invoice_ref = db.collection("invoices2").document(angebots_id)
+    products_ref = invoice_ref.collection("products2")
     products_docs = products_ref.stream()
 
     # Parse product documents into a list of dictionaries
@@ -118,7 +118,7 @@ def get_all_invoices():
     Returns:
         list[dict]: List of invoice entries with customer and invoice details.
     """
-    invoices = list(db.collection("invoices").stream())
+    invoices = list(db.collection("invoices2").stream())
     data = []
 
     for invoice in invoices:
@@ -128,7 +128,7 @@ def get_all_invoices():
         created_at = invoice_data.get("created_at")
 
         # Fetch corresponding customer
-        customer_doc = db.collection("customers").document(customer_id).get()
+        customer_doc = db.collection("customers2").document(customer_id).get()
         customer_data = customer_doc.to_dict() if customer_doc.exists else {}
 
         row = {
@@ -157,7 +157,7 @@ def get_product(article_number):
     Returns:
         dict or None: Product data if found; otherwise, None.
     """
-    doc = db.collection("products").where("Art_Nr", "==", article_number).limit(1).get()
+    doc = db.collection("products2").where("Art_Nr", "==", article_number).limit(1).get()
 
     return doc[0].to_dict() if doc else None
 
@@ -168,7 +168,7 @@ def get_all_products():
     Returns:
         list[dict]: List of product dictionaries with 'id', 'Art-Nr', 'Titel', and 'Hersteller'.
     """
-    products = db.collection("products").stream()
+    products = db.collection("products2").stream()
     return [
         {
          "id": product.id, 
@@ -194,7 +194,7 @@ def get_image(art_nr: str) -> bytes | None:
     extensions = ["jpg", "png", "jpeg"]
 
     for ext in extensions:
-        file_path = f"product_images/{art_nr}.{ext}"
+        file_path = f"product_images2/{art_nr}.{ext}"
         blob = bucket.blob(file_path)
         if blob.exists():
             return blob.download_as_bytes()
@@ -221,7 +221,7 @@ def post_image(products, images, max_threads=20):
         if image_data is None:
             return f"⚠️ Kein Bild für {art_nr} gefunden."
 
-        blob = bucket.blob(f"product_images/{art_nr}.jpg")
+        blob = bucket.blob(f"product_images2/{art_nr}.jpg")
 
         try:
             if isinstance(image_data, st.runtime.uploaded_file_manager.UploadedFile) or hasattr(image_data, "read"):
@@ -258,7 +258,7 @@ def post_customer_offer(customer):
     """
     # Store the information of customer and retrieve the auto-generated ID
     filtered_state = {k: v for k, v in customer.items()}
-    _, customer_doc_ref = db.collection("customers").add(filtered_state)
+    _, customer_doc_ref = db.collection("customers2").add(filtered_state)
     customer_doc_id = customer_doc_ref.id
 
     # Store the offer in the database
@@ -272,7 +272,7 @@ def post_customer_offer(customer):
         "created_at": firestore.SERVER_TIMESTAMP
     }
 
-    db.collection("invoices").add(angebot_Kunden_ID)
+    db.collection("invoices2").add(angebot_Kunden_ID)
 
 def post_offer(customer, products, images):
     """
@@ -285,7 +285,7 @@ def post_offer(customer, products, images):
     """
     # Store the information of customer and retrieve the auto-generated ID
     filtered_state = {k: v for k, v in customer.items()}
-    _, customer_doc_ref = db.collection("customers").add(filtered_state)
+    _, customer_doc_ref = db.collection("customers2").add(filtered_state)
     customer_doc_id = customer_doc_ref.id
 
     # Store the images in the database
@@ -301,7 +301,7 @@ def post_offer(customer, products, images):
         "atu": "",
         "created_at": firestore.SERVER_TIMESTAMP
     }
-    _, angebot_doc_ref = db.collection("invoices").add(angebot_Kunden_ID)
+    _, angebot_doc_ref = db.collection("invoices2").add(angebot_Kunden_ID)
 
     # Store the products of the offers as a subcollection
     for row in products.to_dict(orient="records"):
@@ -309,7 +309,7 @@ def post_offer(customer, products, images):
         clean_row = {k: (bool(v) if k == "Alternative" else v) for k, v in row.items()}
         
         # Add to subcollection "products" under the offer
-        angebot_doc_ref.collection("products").add(clean_row)
+        angebot_doc_ref.collection("products2").add(clean_row)
 
 def post_duplicate_offer(customer, products):
     """
@@ -333,7 +333,7 @@ def post_duplicate_offer(customer, products):
     # Store the information of customer and retrieve the auto-generated ID
     customer["Angebots_ID"] = new_angebot_id
     filtered_state = {k: v for k, v in customer.items()}
-    _, customer_doc_ref = db.collection("customers").add(filtered_state)
+    _, customer_doc_ref = db.collection("customers2").add(filtered_state)
     customer_doc_id = customer_doc_ref.id
 
 
@@ -348,10 +348,10 @@ def post_duplicate_offer(customer, products):
         "created_at": firestore.SERVER_TIMESTAMP
     }
 
-    _, angebot_doc_ref = db.collection("invoices").add(angebot_Kunden_ID)
+    _, angebot_doc_ref = db.collection("invoices2").add(angebot_Kunden_ID)
 
     # Store the products of the offers as a subcollection
-    products_ref = angebot_doc_ref.collection("products")
+    products_ref = angebot_doc_ref.collection("products2")
 
     for row in products.to_dict(orient="records"):
         # Ensure all values are Firestore-compatible
@@ -370,7 +370,7 @@ def put_product(product_df: pd.DataFrame):
     Args:
         product_df (pd.DataFrame): DataFrame containing product data to be synced with Firestore.
     """
-    COLLECTION = "products"
+    COLLECTION = "products2"
     product_df['Alternative'] = product_df['Alternative'].fillna(True).astype(bool)
 
     for _, product in product_df.iterrows():
@@ -396,7 +396,7 @@ def put_product(product_df: pd.DataFrame):
             db.collection(COLLECTION).document(doc_id).set(data)
         else:
             # Create a new document with auto-ID
-            db.collection("products").add(data)
+            db.collection("products2").add(data)
 
 def put_offer(customer, products, images, angebots_id, customer_id):
     """
@@ -410,13 +410,13 @@ def put_offer(customer, products, images, angebots_id, customer_id):
         customer_id (str): ID of the customer.
     """
     # Store the information of customer and retrieve the auto-generated ID
-    db.collection("customers").document(customer_id).set(customer)
+    db.collection("customers2").document(customer_id).set(customer)
 
     # Store the images in the database
     post_image(products, images)
 
     # Update standard invoice information
-    db.collection("invoices").document(angebots_id).update({
+    db.collection("invoices2").document(angebots_id).update({
         "Angebots_ID": st.session_state["customer_information_2"]["Angebots_ID"],
         "rabatt": st.session_state["rabatt"],
         "payment_details": st.session_state["payment_details"],
@@ -425,7 +425,7 @@ def put_offer(customer, products, images, angebots_id, customer_id):
     })
 
     # Delete existing products subcollection
-    products_ref = db.collection("invoices").document(angebots_id).collection("products")
+    products_ref = db.collection("invoices2").document(angebots_id).collection("products2")
     for doc in products_ref.stream():
         doc.reference.delete()
 
@@ -469,7 +469,7 @@ def update_product(doc_id, product_df):
             }
         print(data)
 
-        db.collection("products").document(doc_id).set(data)
+        db.collection("products2").document(doc_id).set(data)
 
 # ------------------------
 # --- DELETE Firestore ---
@@ -491,7 +491,7 @@ def delete_collection(coll_ref, batch_size=20):
 
 def delete_offer(invoice_id):
     # Retrieve the information of the invoice_id
-    invoice_ref = db.collection("invoices").document(invoice_id)
+    invoice_ref = db.collection("invoices2").document(invoice_id)
     invoice = invoice_ref.get()
     data = invoice.to_dict()
 
@@ -500,12 +500,12 @@ def delete_offer(invoice_id):
 
 
     # Delete the customer using Kunden_ID
-    customer_ref = db.collection("customers").document(kunden_id)
+    customer_ref = db.collection("customers2").document(kunden_id)
     customer_ref.delete()
 
     # Delete subcollections under invoice
     try:
-        delete_collection(invoice_ref.collection("products"))
+        delete_collection(invoice_ref.collection("products2"))
     except Exception as e:
         print(f"Error deleting subcollection 'products': {e}")
 

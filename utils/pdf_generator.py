@@ -17,7 +17,7 @@ def format_german_currency(value):
 
     Args:
         value (float or int): The number to format.
-
+ 
     Returns:
         str: The number formatted with comma as decimal and period as thousands separator,
              e.g., 1.234,56. If formatting fails, the original value is returned.

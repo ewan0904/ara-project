@@ -18,7 +18,10 @@ def initialize_session_state_angebot_erstellen():
             "Ort": "",
             "Telefonnummer": "",
             "E_Mail": "",
-            "Angebots_ID": ""
+            "Angebots_ID": "",
+            "Kunden_Nummer": "",
+            "Ansprech_Partner": "",
+            "Ansprech_Partner_Email": ""
         }
 
 # --- Session_state for page 2: Angebot suchen ---
@@ -37,7 +40,10 @@ def initialize_session_state_angebot_suchen():
             "Ort": "",
             "Telefonnummer": "",
             "E_Mail": "",
-            "Angebots_ID": ""
+            "Angebots_ID": "",
+            "Kunden_Nummer": "",
+            "Ansprech_Partner": "",
+            "Ansprech_Partner_Email": ""
         }
 
     if "product_df_2" not in st.session_state:
@@ -60,15 +66,6 @@ def initialize_session_state_angebot_suchen():
 
     if "pdf_angebot" not in st.session_state:
         st.session_state["pdf_preview_2"] = ""
-    
-    if "pdf_auftrag" not in st.session_state:
-        st.session_state["pdf_auftrag"] = ""
-
-    if "pdf_short" not in st.session_state:
-        st.session_state["pdf_short"] = ""
-
-    if "pdf_angebot_wo_price" not in st.session_state:
-        st.session_state["pdf_angebot_wo_price"] = ""
 
     if "images_2" not in st.session_state:
         st.session_state["images_2"] = {}
